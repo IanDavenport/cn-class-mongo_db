@@ -11,7 +11,21 @@ const user = new Schema({
     phoneNumber: {type: String, required: false, unique: true}
 });
 
+
+//  STATIC METHODS FOR SCHEMA
+user.statics.checkDupes = async function(email, phoneNumber) {
+    let result = await this.findOne({$or: [{email}, {phoneNumber}]});
+
+    if (result) {
+        return true;
+    } 
+    return false;
+}
+
+
 module.exports = model('users', user);
+//  MODEL IS A PACKAGED VERSION OF THE SCHEMA
+//  
 
 
 
