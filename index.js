@@ -1,6 +1,8 @@
 
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const session = require('express-session');
+const MongoStore = require('connect-mongo')(session);
 const express = require('express');
 
 const router = require('./routes/router');
@@ -15,9 +17,23 @@ mongoose.connect('mongodb+srv://Ian:password123abc@cluster0.rsd7t.mongodb.net/fr
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
+app.use(session({
+    store: new MongoStore({mongooseConnection: mongoose.connection}),
+    secret: 'keyboardcat',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false,              //  process.env.IN_PROD
+        sameSite: true,
+        maxAge: 1000 * 60 * 60 * 2  // = 2 hours
+    }
+}));
+
+
+
+
 
 app.use('/', router);
-
 
 app.listen(3000, () => {
     console.log('listening on port 3000');
