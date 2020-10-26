@@ -1,5 +1,4 @@
 const SessionModel = require('../models/sessionModel');
-// const SessionModel = require('../models/sessionModel');
 
 exports.checkSignedIn = (async(req, res, next) => {
         if(await SessionModel.checkSession(req.session.userID)) {
