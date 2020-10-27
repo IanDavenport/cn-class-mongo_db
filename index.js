@@ -12,7 +12,7 @@ const express = require('express');
 const SessionModel = require('./models/sessionModel');
 const router = require('./routes/router');
 
-mongoose.connect('mongodb+srv://dean:Password123abc@cluster0.j1kc2.mongodb.net/signup?retryWrites=true&w=majority', {
+mongoose.connect('mongodb+srv://Ian:password123abc@cluster0.j1kc2.mongodb.net/signup?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useUnifiedTopology: true
 });   //  ABOVE AVOIDS GETTING DEPRACATION WARNING
