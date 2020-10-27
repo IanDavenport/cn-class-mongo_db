@@ -4,52 +4,54 @@
 
 //  npm i bcrypt    
 
-
 const {Schema, model} = require('mongoose');
 const bcrypt = require('bcrypt');
 
 const user = new Schema({
     name: {type: String, required: true},
-    email: {type: String, required: true, unique: true},
     age: {type: Number, required: true},
+    email: {type: String, required: true, unique: true},
     phoneNumber: {type: String, required: false, unique: true},
     password: {type: String, required: true}
 });
 
+//  STATIC METHODS FOR SCHEMA  ==============
+user.statics.checkExists = async function (email, phoneNumber) {
+    const exists = await this.exists({$or: [{email}, {phoneNumber}]});
 
-//  STATIC METHODS FOR SCHEMA
-user.statics.checkExists = async function(email, phoneNumber) {
-    let exists = await this.exists({$or: [{email}, {phoneNumber}]});
-
-    // if (exists) {
-    //     return true;
-    // } 
     return exists;
 }
 
-
 user.statics.hashPassword = async function (password) {
-    let hash = await bcrypt.hash(password, 12);  //  12 is the number of times the hash occurs
-    console.log(hash);
+    let hash = await bcrypt.hash(password, 12);
+
     return hash;
 }
 
-
 user.statics.comparePassword = async function (email, attemptedPassword) {
     let user = await this.findOne({email});
+
     if (!user) {
         return false;
-    } 
+    }
+
     let result = await bcrypt.compare(attemptedPassword, user.password);
+
     return result;
 }
 
-
-module.exports = model('users', user);
+module.exports = model('users', user)
 //  MODEL IS A PACKAGED VERSION OF THE SCHEMA
-//  
 
 
 
-
-
+/*
+Signup
+Password123 -> weufb237rgf2uifb34f2hiu3874 -> store in DB
+Password123 -> akjghnry5hr8ewfiubweyqwbuig
+md5
+password123 -> weufb237rgf2uifb34f2hiu3874
+password123 -> weufb237rgf2uifb34f2hiu3874
+Login
+attempted password -> hash input == weufb237rgf2uifb34f2hiu3874
+*/

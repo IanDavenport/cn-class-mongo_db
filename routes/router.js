@@ -1,26 +1,28 @@
 //  npm i nanoid   TO INSTALL NANOID WHICH GIVES RANDOM STRING FOR USER-ID
 
-const {Router} = require('express');
+const {nanoid} = require('nanoid');
+const router = require('express').Router();
+
 const UserModel = require('../models/userModel');
 const {checkSignedIn} = require('../controllers/auth');
 
-const {nanoid} = require('nanoid');
-const router = Router();
-
-
-//                  V -- ADDING '/users', checkSignedIN async(req, res)  HERE WILL ONLY GIVE SIGNED IN USERS
-router.get('/users', async(req, res) => {
-    let allUsers = await UserModel.find({});
-    res.send(allUsers);
+router.get('/', (req, res) => {
+    res.render('index');
 });
- 
+
+
+//     V -- ADDING '/users', checkSignedIN async(req, res)  HERE WILL ONLY GIVE SIGNED IN USERS
+router.get('/users', async(req, res)=> {
+    const users = await UserModel.find({});
+    res.send(users);
+});
 
 //  SIGN-UP SECTION  ==========================================
 router.post('/users/create', async(req, res) => {
-    let {name, email, age, phoneNumber, password} = req.body;
+    const {name, email, age, phoneNumber, password} = req.body;
 
     if (!name || !email || !age || !password) {
-        res.send('Missing required info');
+        res.send('Missing reuqired information');
         return;
     }
 
@@ -29,55 +31,60 @@ router.post('/users/create', async(req, res) => {
         return;
     }
 
-    let hashedPassword = await UserModel.hashPassword(password);
+    let hashedpassword = await UserModel.hashPassword(password);
 
-    let user = new UserModel({
+    const user = new UserModel({
         name,
-        email,
         age,
+        email,
         phoneNumber,
-        password: hashedPassword
+        password: hashedpassword
     });
 
     user.save();
-    req.session.userID = nanoid();
-    res.send('user created');
-});
-//  SIGN-UP SECTION  ============================================
 
+    req.session.userID = nanoid();
+    req.session.save();
+
+    res.send('User was created');
+});   //  SIGN-UP SECTION  ============================================
 
 
 // USER LOG-IN & AUTHENTICATION =============================
-router.post('/login', async (req, res) => {
-    let {email, password} = req.body;
+router.post('/login', async(req, res) => {
+    let {email, password, username} = req.body;
 
     if (!await UserModel.checkExists(email)) {
         res.send('A user with this email doesn\'t exist');
-        //  Incorrect user details submitted
-        return
+        return;
     }
 
     if (await UserModel.comparePassword(email, password)) {
+
         req.session.userID = nanoid();
         req.session.save();
-        res.send('You are now signed in')
-        //  User authenticated and signed in
-        return
-    }
-        res.send('You have entered an incorrect password')
-        // User entered an incorredct password message
-});
-// USER LOG-IN & AUTHENTICATION =============================
 
+        res.send('You are now logged in');
+        return;
+    }
+
+    res.send('You have eneterd the wrong password');
+});  // USER LOG-IN & AUTHENTICATION =============================
 
 
 //  THIS BIT CHECKS THAT USERS ARE SIGNED-IN SO CAN VISIT THE 'AUTH ONLY' SECTIONS
 //               V-- user profile page
-router.get('/protected-route', checkSignedIn, (req,res) => {
-    res.send('Welcome to the Protected Page');
-});
-//  THIS BIT CHECKS THAT USERS ARE SIGNED-IN SO CAN VISIT THE 'AUTH ONLY' SECTIONS
+router.get('/protected-route', checkSignedIn, (req, res) => {
+    res.send('profile page');
+});  //  THIS BIT CHECKS THAT USERS ARE SIGNED-IN SO CAN VISIT THE 'AUTH ONLY' SECTIONS
 
 
+/// USER LOG-OUT SECTION  ///////////////////////
+router.get('/logout', (req, res) => {
+    req.session.destroy();
+
+    res.send('your session has ended');
+});  /// USER LOG-OUT SECTION  ///////////////////////
 
 module.exports = router;
+

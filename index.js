@@ -1,48 +1,58 @@
 //  npm i connect-mongo     <==  NEEDED FOR SESSIONS
 //  npm i express-session    <==  NEEDED FOR SESSIONS
+//  npm i express-handlebars  <==  NEEDED FOR SESSIONS
 
-const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const hbs = require('express-handlebars');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const express = require('express');
 
+const SessionModel = require('./models/sessionModel');
 const router = require('./routes/router');
 
-
-mongoose.connect('mongodb+srv://Ian:password123abc@cluster0.rsd7t.mongodb.net/fred?retryWrites=true&w=majority', {
+mongoose.connect('mongodb+srv://dean:Password123abc@cluster0.j1kc2.mongodb.net/signup?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useUnifiedTopology: true
-}); //  ABOVE AVOIDS GETTING DEPRACATION WARNING
-
+});   //  ABOVE AVOIDS GETTING DEPRACATION WARNING
 
 const app = express();
+
+app.engine('.hbs', hbs({
+    defaultLayout: 'layout',
+    extname: '.hbs'
+}));
+
+app.set('view engine', '.hbs');
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
-
 ////////////  SESSIONS CODE BELOW ////////////  
 app.use(session({
-    store: new MongoStore({mongooseConnection: mongoose.connection}),   // RE-USES EXISTING CONNECTION SET-UP ABOVE
-    secret: 'keyboard cat',         //  SHOULD BE IN process.env WHEN LIVE
+    store: new MongoStore({mongooseConnection: mongoose.connection}),
+    secret: 'keyboard cat',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false,              //  process.env.IN_PROD  // ONLY NEEDED AS TYRUE OVER HTTPS
-        sameSite: true,             //  SO COOKIE CAN'T BE ACCESSED FROM ANOTHER WEBSITE
-        maxAge: 1000 * 60 * 60 * 2  // = 2 hours  LOGS USER OUT AFTER TIME SET
+        maxAge: 1000 * 60 * 60 * 2, // 2 hours
+        secure: false,
+        sameSite: true
     }
 }));
-////////////  SESSIONS CODE ABOVE ////////////  
 
+app.use(async (req, res, next) => {
+    let loggedIn = await SessionModel.checkSession(req.session.userID);
+
+    res.locals.loggedIn = loggedIn;
+
+    return next();
+});  ////////////  SESSIONS CODE ABOVE ////////////  
 
 app.use('/', router);
 
-app.listen(3000, () => {
-    console.log('listening on port 3000');
-});
-
+app.listen('3000');
 
 
 // #### EARLY CODE FOR ADDING A NEW USER ####
@@ -62,7 +72,4 @@ app.listen(3000, () => {
 //     // let allUsers = await userModel.find({Dean});  // WOULD FIND ONLY DEANS
 // }
 // getUsers();
-
-
-
 

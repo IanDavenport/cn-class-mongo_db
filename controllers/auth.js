@@ -1,9 +1,11 @@
 const SessionModel = require('../models/sessionModel');
 
-exports.checkSignedIn = (async(req, res, next) => {
-        if(await SessionModel.checkSession(req.session.userID)) {
-            next();
-        } else {
-            res.send('You must log-in to access this page');
-        }
-});
+exports.checkSignedIn = async (req, res, next) => {
+
+    if (await SessionModel.checkSession(req.session.userID)) {
+        next();
+        return;
+    }
+
+    res.send('you must be logged in to access this page');
+}
